@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS quizzes (
     option_d TEXT NOT NULL,
     correct_answer CHAR(1) NOT NULL CHECK (correct_answer IN ('A', 'B', 'C', 'D')),
     difficulty INTEGER DEFAULT 1 CHECK (difficulty BETWEEN 1 AND 5),
+    explanation TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -137,7 +137,7 @@ router.post('/:id/answer', authenticateToken, async (req, res) => {
     res.json({
       correct: isCorrect,
       correctAnswer: quiz.correct_answer,
-      explanation: `正解は${quiz.correct_answer}です。`,
+      explanation: quiz.explanation || `正解は${quiz.correct_answer}です。`,
       quiz: {
         id: quiz.id,
         question: quiz.question,
@@ -258,8 +258,8 @@ router.post('/generate', authenticateToken, async (req, res) => {
     // 生成されたクイズをデータベースに保存
     const result = await new Promise((resolve, reject) => {
       db.run(`
-        INSERT INTO quizzes (topic, question, option_a, option_b, option_c, option_d, correct_answer, difficulty) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO quizzes (topic, question, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         generatedQuiz.topic,
         generatedQuiz.question,
@@ -268,7 +268,8 @@ router.post('/generate', authenticateToken, async (req, res) => {
         generatedQuiz.option_c,
         generatedQuiz.option_d,
         generatedQuiz.correct_answer,
-        generatedQuiz.difficulty
+        generatedQuiz.difficulty,
+        generatedQuiz.explanation
       ], function(err) {
         if (err) reject(err);
         else resolve({ id: this.lastID });
@@ -340,8 +341,8 @@ router.post('/generate-batch', authenticateToken, async (req, res) => {
         // データベースに保存
         const result = await new Promise((resolve, reject) => {
           db.run(`
-            INSERT INTO quizzes (topic, question, option_a, option_b, option_c, option_d, correct_answer, difficulty) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO quizzes (topic, question, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
           `, [
             generatedQuiz.topic,
             generatedQuiz.question,
@@ -350,7 +351,8 @@ router.post('/generate-batch', authenticateToken, async (req, res) => {
             generatedQuiz.option_c,
             generatedQuiz.option_d,
             generatedQuiz.correct_answer,
-            generatedQuiz.difficulty
+            generatedQuiz.difficulty,
+            generatedQuiz.explanation
           ], function(err) {
             if (err) reject(err);
             else resolve({ id: this.lastID });
