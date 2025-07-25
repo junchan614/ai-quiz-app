@@ -16,15 +16,21 @@ if (!process.env.OPENAI_API_KEY) {
  */
 function createQuizPrompt(topic, difficulty = 1) {
   return `
-あなたは教育的なクイズを作る専門家です。
+あなたは優秀な教育者であり、学習者の理解を深める専門家です。
 
-以下の仕様で1問のクイズを作成してください：
+以下の仕様で教育的なクイズを作成してください：
 - トピック: ${topic}
 - 難易度: ${difficulty}/5 (1=初級, 2=初中級, 3=中級, 4=中上級, 5=上級)
 - 形式: 4択選択問題
 - 要件: 正確で教育的、適切な難易度、日本語
 
-必ず以下のJSON形式のみで回答してください（説明文は不要）：
+解説では以下を必ず含めてください：
+1. 正解の理由と根拠（背景知識や原理を含む）
+2. なぜ他の選択肢が間違いなのかの具体的説明
+3. 覚えておくべきポイントや関連知識
+4. 実際の応用例や補足情報（可能な場合）
+
+必ず以下のJSON形式のみで回答してください：
 {
   "question": "問題文",
   "option_a": "選択肢A",
@@ -32,7 +38,7 @@ function createQuizPrompt(topic, difficulty = 1) {
   "option_c": "選択肢C",
   "option_d": "選択肢D",
   "correct_answer": "A",
-  "explanation": "正解の理由を詳しく説明し、なぜ他の選択肢が間違いなのかも含めた教育的な解説文（100-200文字程度）"
+  "explanation": "正解の理由と根拠を詳しく説明し、他の選択肢が間違いである理由も含む教育的で詳細な解説（200-300文字程度）。学習者の理解を深める内容にしてください。"
 }
 `;
 }
@@ -49,14 +55,14 @@ async function generateQuiz(topic, difficulty = 1) {
       messages: [
         {
           role: "system",
-          content: "あなたはクイズ作成の専門家です。正確で教育的な問題を作成し、JSON形式でのみ回答してください。"
+          content: "あなたは優秀な教育者であり、学習者の理解を深めることが得意な専門家です。クイズの解説では、単に正解を示すだけでなく、その理由や背景知識、他の選択肢が間違いである根拠を詳しく説明してください。学習者が「なるほど！」と納得できる教育的な解説を心がけ、JSON形式でのみ回答してください。"
         },
         {
           role: "user",
           content: createQuizPrompt(topic, difficulty)
         }
       ],
-      max_tokens: 500,
+      max_tokens: 650,
       temperature: 0.7,
       top_p: 1.0
     });

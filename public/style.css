@@ -741,11 +741,15 @@ body {
 .explanation-text {
     background: #e8f4f8;
     border-left: 4px solid #17a2b8;
-    padding: 1rem;
-    border-radius: 5px;
-    line-height: 1.6;
+    padding: 1.25rem;
+    border-radius: 8px;
+    line-height: 1.7;
     color: #2c3e50;
     font-size: 0.95rem;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .explanation-text:empty::before {

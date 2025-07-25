@@ -286,10 +286,11 @@ function processAnswerResult(result, selectedAnswer, elements) {
     if (explanation && explanation.trim()) {
         elements.resultExplanation.textContent = explanation;
     } else {
-        // フォールバック解説を生成
+        // フォールバック解説を生成（より詳細）
+        const quiz = currentQuizzes[currentQuizIndex];
         const defaultExplanation = isCorrect 
-            ? `正解は ${result.correctAnswer} です。よくできました！`
-            : `正解は ${result.correctAnswer} でした。${selectedAnswer} を選択されましたが、正しい答えを覚えておきましょう。`;
+            ? `正解は ${result.correctAnswer} です。この問題のポイントをしっかり理解できていますね。この知識を活用して、さらに学習を深めていきましょう。`
+            : `正解は ${result.correctAnswer} でした。選択された ${selectedAnswer} は惜しい選択でしたが、正解と比較して違いを理解することで、次回はきっと正解できるでしょう。復習して知識を定着させましょう。`;
         elements.resultExplanation.textContent = defaultExplanation;
     }
     
