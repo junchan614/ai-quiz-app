@@ -713,7 +713,7 @@ body {
 }
 
 .result-details {
-    margin-top: 1.5rem;
+    margin: 1rem 0 1.5rem 0;
     padding: 1rem;
     background: #f8f9fa;
     border-radius: 10px;
@@ -721,6 +721,37 @@ body {
 
 .result-details p {
     margin: 0.5rem 0;
+}
+
+/* 解説セクション */
+.explanation-section {
+    margin-top: 1.5rem;
+    text-align: left;
+}
+
+.explanation-title {
+    color: #495057;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.explanation-text {
+    background: #e8f4f8;
+    border-left: 4px solid #17a2b8;
+    padding: 1rem;
+    border-radius: 5px;
+    line-height: 1.6;
+    color: #2c3e50;
+    font-size: 0.95rem;
+}
+
+.explanation-text:empty::before {
+    content: "解説を読み込み中...";
+    color: #6c757d;
+    font-style: italic;
 }
 
 /* 統計グリッド */

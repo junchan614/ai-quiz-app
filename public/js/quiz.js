@@ -280,7 +280,19 @@ function processAnswerResult(result, selectedAnswer, elements) {
     // 結果表示
     elements.resultIcon.textContent = isCorrect ? '✅' : '❌';
     elements.resultTitle.textContent = isCorrect ? '正解！' : '不正解';
-    elements.resultExplanation.textContent = result.explanation || '解説はありません';
+    
+    // 解説文の表示（詳細な処理）
+    const explanation = result.explanation || currentQuizzes[currentQuizIndex]?.explanation;
+    if (explanation && explanation.trim()) {
+        elements.resultExplanation.textContent = explanation;
+    } else {
+        // フォールバック解説を生成
+        const defaultExplanation = isCorrect 
+            ? `正解は ${result.correctAnswer} です。よくできました！`
+            : `正解は ${result.correctAnswer} でした。${selectedAnswer} を選択されましたが、正しい答えを覚えておきましょう。`;
+        elements.resultExplanation.textContent = defaultExplanation;
+    }
+    
     elements.correctAnswer.textContent = result.correctAnswer;
     elements.userAnswer.textContent = selectedAnswer;
     

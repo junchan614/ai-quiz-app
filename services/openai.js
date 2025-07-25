@@ -32,7 +32,7 @@ function createQuizPrompt(topic, difficulty = 1) {
   "option_c": "選択肢C",
   "option_d": "選択肢D",
   "correct_answer": "A",
-  "explanation": "解説文"
+  "explanation": "正解の理由を詳しく説明し、なぜ他の選択肢が間違いなのかも含めた教育的な解説文（100-200文字程度）"
 }
 `;
 }
