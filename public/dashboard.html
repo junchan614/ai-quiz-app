@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ダッシュボード - AIクイズ生成アプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">🧠 AIクイズ</h1>
+            <div class="auth-status" id="authStatus">
+                <span class="welcome-text" id="welcomeText">読み込み中...</span>
+                <button class="btn btn-secondary" onclick="logout()">ログアウト</button>
+            </div>
+        </header>
+
+        <main class="main">
+            <section class="dashboard-hero">
+                <h2 class="hero-title">ダッシュボード</h2>
+                <p class="hero-description">お疲れさまです！今日もクイズで知識を深めましょう。</p>
+            </section>
+
+            <!-- ユーザー統計 -->
+            <section class="stats-section">
+                <h3 class="section-title">📊 あなたの成績</h3>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalAnswers">-</div>
+                        <div class="stat-label">総回答数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="correctAnswers">-</div>
+                        <div class="stat-label">正解数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="accuracyPercentage">-%</div>
+                        <div class="stat-label">正答率</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- クイズ開始 -->
+            <section class="quiz-start-section">
+                <h3 class="section-title">🎯 クイズに挑戦</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option-card">
+                        <h4>AIクイズ生成</h4>
+                        <p>お好みのトピックでAIがクイズを自動生成</p>
+                        <button class="btn btn-primary btn-full" onclick="startAIQuiz()">
+                            🤖 AIクイズを始める
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 最近の履歴 -->
+            <section class="history-section">
+                <h3 class="section-title">📝 最近の回答履歴</h3>
+                <div class="history-list" id="historyList">
+                    <p class="text-center">履歴を読み込み中...</p>
+                </div>
+                <div class="text-center">
+                    <button class="btn btn-secondary" onclick="loadMoreHistory()">
+                        もっと見る
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 AIクイズ生成アプリ. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        let currentUser = null;
+
+        // ページ読み込み時の処理
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('ダッシュボード読み込み開始');
+            
+            // 認証チェック
+            currentUser = await requireAuth();
+            if (!currentUser) return;
+
+            // ユーザー情報表示
+            updateWelcomeText();
+            
+            // データ読み込み
+            await Promise.all([
+                loadUserStats(),
+                loadRecentHistory()
+            ]);
+        });
+
+        // ウェルカムメッセージ更新
+        function updateWelcomeText() {
+            const welcomeText = document.getElementById('welcomeText');
+            welcomeText.textContent = `こんにちは、${currentUser.username}さん`;
+        }
+
+        // ユーザー統計の読み込み
+        async function loadUserStats() {
+            try {
+                const response = await fetch('/api/user/stats', {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayUserStats(data.stats);
+                } else {
+                    console.error('統計データの取得に失敗しました');
+                }
+            } catch (error) {
+                console.error('統計データ読み込みエラー:', error);
+            }
+        }
+
+        // 統計データの表示
+        function displayUserStats(stats) {
+            document.getElementById('totalAnswers').textContent = stats.total_answers || 0;
+            document.getElementById('correctAnswers').textContent = stats.correct_answers || 0;
+            document.getElementById('accuracyPercentage').textContent = 
+                (stats.accuracy_percentage || 0) + '%';
+        }
+
+
+        // 最近の履歴読み込み
+        async function loadRecentHistory() {
+            try {
+                const response = await fetch('/api/user/history?limit=5', {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayHistory(data.history);
+                } else {
+                    console.error('履歴の取得に失敗しました');
+                }
+            } catch (error) {
+                console.error('履歴読み込みエラー:', error);
+                document.getElementById('historyList').innerHTML = '<p class="text-center">履歴の読み込みに失敗しました</p>';
+            }
+        }
+
+        // 履歴の表示
+        function displayHistory(history) {
+            const historyList = document.getElementById('historyList');
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<p class="text-center">まだクイズに回答していません。最初のクイズに挑戦してみましょう！</p>';
+                return;
+            }
+
+            historyList.innerHTML = history.map(item => `
+                <div class="history-item">
+                    <div class="history-question">${item.question}</div>
+                    <div class="history-details">
+                        <span class="history-topic">${item.topic}</span>
+                        <span class="history-result ${item.is_correct ? 'correct' : 'incorrect'}">
+                            ${item.is_correct ? '✅ 正解' : '❌ 不正解'}
+                        </span>
+                        <span class="history-date">${new Date(item.answered_at).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ランダムクイズ開始
+        async function startRandomQuiz() {
+            console.log('ランダムクイズ開始');
+            try {
+                const response = await fetch('/api/quiz/random/get', {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    startQuizWithData(data.quiz);
+                } else {
+                    alert('クイズの取得に失敗しました');
+                }
+            } catch (error) {
+                console.error('ランダムクイズエラー:', error);
+                alert('クイズの開始に失敗しました');
+            }
+        }
+
+        // AIクイズ生成ページへ移動
+        function startAIQuiz() {
+            location.href = 'quiz.html';
+        }
+
+        // クイズデータでクイズを開始
+        function startQuizWithData(quiz) {
+            // クイズデータをセッションストレージに保存
+            sessionStorage.setItem('currentQuiz', JSON.stringify(quiz));
+            
+            // クイズページに移動
+            location.href = 'quiz.html';
+        }
+
+        // 履歴をもっと読み込み
+        function loadMoreHistory() {
+            // 実装予定: ページネーション機能
+            alert('この機能は後で実装予定です');
+        }
+    </script>
+</body>
+</html>

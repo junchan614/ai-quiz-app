@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>クイズ - AIクイズ生成アプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- ヘッダー -->
+        <header class="header">
+            <div class="nav">
+                <div class="logo">
+                    <h1>🧠 AIクイズ</h1>
+                </div>
+                <div class="nav-links">
+                    <a href="/dashboard.html">ダッシュボード</a>
+                    <a href="/quiz.html" class="active">クイズ</a>
+                    <button id="logoutBtn" class="btn btn-secondary">ログアウト</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content">
+            <!-- クイズ生成セクション -->
+            <section id="quiz-generator" class="card">
+                <h2>🤖 AIクイズ生成</h2>
+                <div class="form-group">
+                    <label for="topic">トピック:</label>
+                    <input type="text" id="topic" placeholder="例: JavaScript, React, CSS..." required>
+                </div>
+                <div class="form-group">
+                    <label for="difficulty">難易度:</label>
+                    <select id="difficulty">
+                        <option value="1">初級 (1)</option>
+                        <option value="2" selected>初中級 (2)</option>
+                        <option value="3">中級 (3)</option>
+                        <option value="4">中上級 (4)</option>
+                        <option value="5">上級 (5)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="count">生成数:</label>
+                    <select id="count">
+                        <option value="1" selected>1問</option>
+                        <option value="2">2問</option>
+                        <option value="3">3問</option>
+                        <option value="5">5問</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button id="generateBtn" class="btn btn-primary">クイズ生成</button>
+                </div>
+            </section>
+
+            <!-- ローディング表示 -->
+            <section id="loading" class="loading-section hidden">
+                <div class="loading-spinner"></div>
+                <p>AIがクイズを生成中...</p>
+            </section>
+
+            <!-- クイズ表示セクション -->
+            <section id="quiz-section" class="card hidden">
+                <div class="quiz-header">
+                    <h2 id="quiz-topic">クイズ</h2>
+                    <div class="quiz-meta">
+                        <span id="quiz-difficulty" class="difficulty-badge">難易度: 2</span>
+                        <span id="quiz-progress" class="progress-badge">問題 1/1</span>
+                    </div>
+                </div>
+                
+                <div class="quiz-content">
+                    <h3 id="quiz-question">問題文がここに表示されます</h3>
+                    
+                    <div id="quiz-options" class="options-container">
+                        <button class="option-btn" data-answer="A">
+                            <span class="option-label">A</span>
+                            <span class="option-text">選択肢A</span>
+                        </button>
+                        <button class="option-btn" data-answer="B">
+                            <span class="option-label">B</span>
+                            <span class="option-text">選択肢B</span>
+                        </button>
+                        <button class="option-btn" data-answer="C">
+                            <span class="option-label">C</span>
+                            <span class="option-text">選択肢C</span>
+                        </button>
+                        <button class="option-btn" data-answer="D">
+                            <span class="option-label">D</span>
+                            <span class="option-text">選択肢D</span>
+                        </button>
+                    </div>
+
+                    <div class="quiz-controls">
+                        <button id="submitAnswer" class="btn btn-primary" disabled>回答する</button>
+                        <button id="nextQuiz" class="btn btn-secondary hidden">次の問題</button>
+                        <button id="backToGenerator" class="btn btn-outline hidden">新しいクイズを生成</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 回答結果セクション -->
+            <section id="result-section" class="card hidden">
+                <div class="result-content">
+                    <div id="result-icon" class="result-icon">✅</div>
+                    <h3 id="result-title">正解！</h3>
+                    <p id="result-explanation">解説がここに表示されます</p>
+                    <div class="result-details">
+                        <p><strong>正解:</strong> <span id="correct-answer">A</span></p>
+                        <p><strong>あなたの回答:</strong> <span id="user-answer">A</span></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 統計セクション -->
+            <section id="stats-section" class="card hidden">
+                <h2>📊 セッション統計</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-questions">0</div>
+                        <div class="stat-label">回答数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="correct-answers">0</div>
+                        <div class="stat-label">正解数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="accuracy-rate">0%</div>
+                        <div class="stat-label">正答率</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="current-streak">0</div>
+                        <div class="stat-label">連続正解</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- エラーメッセージ -->
+        <div id="error-message" class="error-message hidden">
+            <span id="error-text">エラーメッセージ</span>
+            <button id="close-error" class="close-btn">&times;</button>
+        </div>
+
+        <!-- 成功メッセージ -->
+        <div id="success-message" class="success-message hidden">
+            <span id="success-text">成功メッセージ</span>
+            <button id="close-success" class="close-btn">&times;</button>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/quiz.js"></script>
+</body>
+</html>

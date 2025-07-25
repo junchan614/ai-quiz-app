@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - AIクイズ生成アプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">🧠 AIクイズ</h1>
+            <button class="btn btn-secondary" onclick="location.href='index.html'">← ホームに戻る</button>
+        </header>
+
+        <main class="auth-main">
+            <div class="auth-container">
+                <!-- ログインフォーム -->
+                <div class="auth-form" id="loginForm">
+                    <h2 class="auth-title">ログイン</h2>
+                    
+                    <form onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label for="loginUsername">ユーザー名またはメールアドレス</label>
+                            <input 
+                                type="text" 
+                                id="loginUsername" 
+                                name="username" 
+                                required
+                                placeholder="ユーザー名またはメール"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="loginPassword">パスワード</label>
+                            <input 
+                                type="password" 
+                                id="loginPassword" 
+                                name="password" 
+                                required
+                                placeholder="パスワード"
+                            >
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-full">
+                            ログイン
+                        </button>
+                    </form>
+                    
+                    <div class="auth-switch">
+                        <p>アカウントをお持ちでない方は</p>
+                        <button class="link-btn" onclick="switchToRegister()">新規会員登録</button>
+                    </div>
+                </div>
+
+                <!-- 会員登録フォーム -->
+                <div class="auth-form" id="registerForm" style="display: none;">
+                    <h2 class="auth-title">新規会員登録</h2>
+                    
+                    <form onsubmit="handleRegister(event)">
+                        <div class="form-group">
+                            <label for="registerUsername">ユーザー名</label>
+                            <input 
+                                type="text" 
+                                id="registerUsername" 
+                                name="username" 
+                                required
+                                placeholder="ユーザー名"
+                                minlength="3"
+                            >
+                            <small class="form-help">3文字以上で入力してください</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="registerEmail">メールアドレス</label>
+                            <input 
+                                type="email" 
+                                id="registerEmail" 
+                                name="email" 
+                                required
+                                placeholder="メールアドレス"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="registerPassword">パスワード</label>
+                            <input 
+                                type="password" 
+                                id="registerPassword" 
+                                name="password" 
+                                required
+                                placeholder="パスワード"
+                                minlength="8"
+                            >
+                            <small class="form-help">8文字以上で入力してください</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirmPassword">パスワード確認</label>
+                            <input 
+                                type="password" 
+                                id="confirmPassword" 
+                                name="confirmPassword" 
+                                required
+                                placeholder="パスワード（確認）"
+                            >
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-full">
+                            会員登録
+                        </button>
+                    </form>
+                    
+                    <div class="auth-switch">
+                        <p>既にアカウントをお持ちの方は</p>
+                        <button class="link-btn" onclick="switchToLogin()">ログイン</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- エラー・成功メッセージ -->
+            <div class="message-container">
+                <div class="alert alert-error" id="errorMessage" style="display: none;"></div>
+                <div class="alert alert-success" id="successMessage" style="display: none;"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        // ページ読み込み時の処理
+        document.addEventListener('DOMContentLoaded', function() {
+            // URLハッシュで初期表示を決定
+            if (location.hash === '#register') {
+                switchToRegister();
+            }
+
+            // 既にログインしている場合はダッシュボードにリダイレクト
+            checkAuth().then(user => {
+                if (user) {
+                    location.href = 'dashboard.html';
+                }
+            });
+        });
+
+        // フォーム切り替え
+        function switchToRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            clearMessages();
+            location.hash = 'register';
+        }
+
+        function switchToLogin() {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            clearMessages();
+            location.hash = '';
+        }
+
+        // ログイン処理
+        async function handleLogin(event) {
+            event.preventDefault();
+            clearMessages();
+
+            const formData = new FormData(event.target);
+            const credentials = {
+                username: formData.get('username'),
+                password: formData.get('password')
+            };
+
+            try {
+                showLoading('ログイン中...');
+                const success = await login(credentials.username, credentials.password);
+                
+                if (success) {
+                    showSuccess('ログインしました！ダッシュボードに移動します...');
+                    setTimeout(() => {
+                        location.href = 'dashboard.html';
+                    }, 1500);
+                }
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 会員登録処理
+        async function handleRegister(event) {
+            event.preventDefault();
+            clearMessages();
+
+            const formData = new FormData(event.target);
+            const userData = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                password: formData.get('password'),
+                confirmPassword: formData.get('confirmPassword')
+            };
+
+            // パスワード確認
+            if (userData.password !== userData.confirmPassword) {
+                showError('パスワードが一致しません');
+                return;
+            }
+
+            try {
+                showLoading('会員登録中...');
+                const success = await register(userData.username, userData.email, userData.password);
+                
+                if (success) {
+                    showSuccess('会員登録が完了しました！ダッシュボードに移動します...');
+                    setTimeout(() => {
+                        location.href = 'dashboard.html';
+                    }, 1500);
+                }
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // メッセージ表示機能
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+        }
+
+        function clearMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function showLoading(message) {
+            // ボタンを無効化してローディング表示
+            const submitBtns = document.querySelectorAll('button[type="submit"]');
+            submitBtns.forEach(btn => {
+                btn.disabled = true;
+                btn.textContent = message;
+            });
+        }
+
+        function hideLoading() {
+            // ボタンを有効化して元の表示に戻す
+            const submitBtns = document.querySelectorAll('button[type="submit"]');
+            submitBtns.forEach(btn => {
+                btn.disabled = false;
+            });
+            
+            document.querySelector('#loginForm button[type="submit"]').textContent = 'ログイン';
+            document.querySelector('#registerForm button[type="submit"]').textContent = '会員登録';
+        }
+    </script>
+</body>
+</html>

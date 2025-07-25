@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIクイズ生成アプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">🧠 AIクイズ</h1>
+            <div class="auth-status" id="authStatus">
+                <button class="btn btn-primary" onclick="location.href='login.html'">ログイン</button>
+                <button class="btn btn-secondary" onclick="location.href='login.html#register'">会員登録</button>
+            </div>
+        </header>
+
+        <main class="main">
+            <section class="hero">
+                <h2 class="hero-title">AI が作る無限のクイズに挑戦！</h2>
+                <p class="hero-description">
+                    あなたの知識をテストしよう。<br>
+                    AIが生成する多様なトピックのクイズで、学習を楽しくサポートします。
+                </p>
+                <div class="hero-actions">
+                    <button class="btn btn-large btn-primary" onclick="startQuiz()">
+                        🎯 クイズを始める
+                    </button>
+                </div>
+            </section>
+
+            <section class="features">
+                <h3 class="section-title">✨ 特徴</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h4>AI自動生成</h4>
+                        <p>最新のAI技術で、あらゆるトピックの問題を自動生成</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h4>学習記録</h4>
+                        <p>正答率や学習履歴を詳細に記録・分析</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎨</div>
+                        <h4>多様なジャンル</h4>
+                        <p>プログラミング、歴史、科学など幅広い分野をカバー</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h4>即座に結果</h4>
+                        <p>回答と解説をリアルタイムで表示</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="topics">
+                <h3 class="section-title">📚 利用可能なトピック</h3>
+                <div class="topic-list" id="topicList">
+                    <div class="topic-card">プログラミング基礎</div>
+                    <div class="topic-card">数学</div>
+                    <div class="topic-card">歴史</div>
+                    <div class="topic-card">科学</div>
+                    <div class="topic-card">英語</div>
+                    <div class="topic-card">地理</div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 AIクイズ生成アプリ. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- ユーザー情報を非表示で保持 -->
+    <div id="userInfo" style="display: none;"></div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        // ページ読み込み時に認証状態をチェック
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('ページが読み込まれました');
+            checkAuthStatus();
+            loadTopics();
+        });
+
+        // クイズ開始機能
+        function startQuiz() {
+            console.log('クイズ開始ボタンがクリックされました');
+            checkAuth().then(user => {
+                if (user) {
+                    // ログイン済みの場合はダッシュボードに移動
+                    console.log('ログイン済みユーザー、ダッシュボードに移動');
+                    location.href = 'dashboard.html';
+                } else {
+                    // 未ログインの場合はログインページに移動
+                    console.log('未ログインユーザー、ログインページに移動');
+                    location.href = 'login.html';
+                }
+            }).catch(error => {
+                console.error('クイズ開始エラー:', error);
+                location.href = 'login.html';
+            });
+        }
+
+        // 認証状態の表示更新
+        function updateAuthDisplay(user) {
+            const authStatus = document.getElementById('authStatus');
+            if (user) {
+                authStatus.innerHTML = `
+                    <span class="welcome-text">こんにちは、${user.username}さん</span>
+                    <button class="btn btn-primary" onclick="location.href='dashboard.html'">ダッシュボード</button>
+                    <button class="btn btn-secondary" onclick="logout()">ログアウト</button>
+                `;
+            } else {
+                authStatus.innerHTML = `
+                    <button class="btn btn-primary" onclick="location.href='login.html'">ログイン</button>
+                    <button class="btn btn-secondary" onclick="location.href='login.html#register'">会員登録</button>
+                `;
+            }
+        }
+
+        // 認証状態チェック
+        async function checkAuthStatus() {
+            try {
+                console.log('認証状態をチェック中...');
+                const user = await checkAuth();
+                console.log('認証結果:', user);
+                updateAuthDisplay(user);
+                
+                // ユーザー情報を保存
+                if (user) {
+                    document.getElementById('userInfo').textContent = JSON.stringify(user);
+                }
+            } catch (error) {
+                console.error('認証状態チェックエラー:', error);
+                updateAuthDisplay(null);
+            }
+        }
+
+        // トピック一覧の読み込み
+        async function loadTopics() {
+            try {
+                const response = await fetch('/api/quiz/topics/list');
+                if (response.ok) {
+                    const data = await response.json();
+                    displayTopics(data.topics);
+                }
+            } catch (error) {
+                console.error('トピック読み込みエラー:', error);
+            }
+        }
+
+        // トピック表示
+        function displayTopics(topics) {
+            const topicList = document.getElementById('topicList');
+            if (topics && topics.length > 0) {
+                topicList.innerHTML = topics.map(topic => 
+                    `<div class="topic-card">${topic.topic} (${topic.count}問)</div>`
+                ).join('');
+            }
+        }
+    </script>
+</body>
+</html>
