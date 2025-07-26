@@ -1,5 +1,23 @@
 const jwt = require('jsonwebtoken');
 
+// JWT秘密鍵の検証
+const validateJWTSecret = () => {
+  const jwtSecret = process.env.JWT_SECRET;
+  
+  if (!jwtSecret) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+  
+  if (process.env.NODE_ENV === 'production' && jwtSecret.length < 32) {
+    throw new Error('Production environment requires a strong JWT_SECRET (minimum 32 characters)');
+  }
+  
+  return jwtSecret;
+};
+
+// 起動時に秘密鍵を検証
+const JWT_SECRET = validateJWTSecret();
+
 // JWT認証ミドルウェア
 const authenticateToken = (req, res, next) => {
   try {
@@ -13,7 +31,7 @@ const authenticateToken = (req, res, next) => {
     }
     
     // 2. トークンを検証・デコード
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     
     // 3. ユーザー情報をrequestオブジェクトに追加
     req.user = {

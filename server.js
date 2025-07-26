@@ -28,21 +28,26 @@ app.use(helmet({
   contentSecurityPolicy: false
 }));
 
-// CORS設定
+// CORS設定（本番環境対応）
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean)
+  : ['http://localhost:3000'];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-domain.com'] 
-    : ['http://localhost:3000'],
-  credentials: true
+  origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 
-// レート制限（開発環境では緩和）
+// レート制限（本番環境強化）
 const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1分
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 開発環境では1000リクエスト
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || (15 * 60 * 1000), // 15分
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || (process.env.NODE_ENV === 'production' ? 100 : 1000),
   message: {
     error: 'リクエストが多すぎます。しばらく待ってから再試行してください。'
-  }
+  },
+  standardHeaders: true,
+  legacyHeaders: false
 });
 
 // ログイン試行のレート制限（開発環境では緩和）
@@ -56,10 +61,28 @@ const authLimiter = rateLimit({
 
 app.use(limiter);
 
+// セキュリティヘッダーの追加
+app.use((req, res, next) => {
+  // XSS攻撃対策
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  
+  // 本番環境のみHTTPS強制
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  
+  next();
+});
+
 // 基本ミドルウェア
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(cookieParser());
+app.use(express.json({ limit: '1mb' })); // 本番環境では制限を厳しく
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(cookieParser({
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.COOKIE_SAME_SITE || 'lax'
+}));
 
 // 静的ファイルの提供
 app.use(express.static(path.join(__dirname, 'public')));

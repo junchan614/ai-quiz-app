@@ -3,6 +3,23 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { getDatabase } = require('../database/db');
 
+// JWT秘密鍵の検証（認証ミドルウェアと同じロジック）
+const validateJWTSecret = () => {
+  const jwtSecret = JWT_SECRET;
+  
+  if (!jwtSecret) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+  
+  if (process.env.NODE_ENV === 'production' && jwtSecret.length < 32) {
+    throw new Error('Production environment requires a strong JWT_SECRET (minimum 32 characters)');
+  }
+  
+  return jwtSecret;
+};
+
+const JWT_SECRET = validateJWTSecret();
+
 const router = express.Router();
 
 // ユーザー登録
@@ -66,7 +83,7 @@ router.post('/register', async (req, res) => {
         userId: result.id, 
         username: username 
       },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: '24h' }
     );
     
@@ -142,7 +159,7 @@ router.post('/login', async (req, res) => {
         userId: user.id, 
         username: user.username 
       },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: '24h' }
     );
     
@@ -189,7 +206,7 @@ router.get('/me', async (req, res) => {
     }
     
     // トークンの検証
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     
     const db = getDatabase();
     
