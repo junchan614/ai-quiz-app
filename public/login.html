@@ -118,11 +118,6 @@
                 </div>
             </div>
 
-            <!-- エラー・成功メッセージ -->
-            <div class="message-container">
-                <div class="alert alert-error" id="errorMessage" style="display: none;"></div>
-                <div class="alert alert-success" id="successMessage" style="display: none;"></div>
-            </div>
         </main>
     </div>
 
@@ -222,18 +217,25 @@
             }
         }
 
-        // メッセージ表示機能（無効化）
+        // メッセージ表示機能（コンソールログに変更）
         function showError(message) {
-            // メッセージ表示を無効化
+            console.error('ログインエラー:', message);
+            // 入力フィールドの境界色を赤に変更してエラーを示す
+            const inputs = document.querySelectorAll('#loginForm input, #registerForm input');
+            inputs.forEach(input => {
+                input.style.borderColor = '#dc3545';
+                setTimeout(() => {
+                    input.style.borderColor = '';
+                }, 3000);
+            });
         }
 
         function showSuccess(message) {
-            // メッセージ表示を無効化
+            console.log('成功:', message);
         }
 
         function clearMessages() {
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
+            // メッセージ要素が削除されたため何もしない
         }
 
         function showLoading(message) {
