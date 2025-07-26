@@ -5,7 +5,7 @@ const { getDatabase } = require('../database/db');
 
 // JWT秘密鍵の検証（認証ミドルウェアと同じロジック）
 const validateJWTSecret = () => {
-  const jwtSecret = JWT_SECRET;
+  const jwtSecret = process.env.JWT_SECRET;
   
   if (!jwtSecret) {
     throw new Error('JWT_SECRET environment variable is required');
