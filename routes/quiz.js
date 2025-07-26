@@ -134,6 +134,10 @@ router.post('/:id/answer', authenticateToken, async (req, res) => {
       );
     });
     
+    // デバッグ: 回答時の解説を確認
+    console.log('🔍 回答時の解説取得:', quiz.explanation);
+    console.log('🔍 回答時の解説長さ:', quiz.explanation ? quiz.explanation.length : 0, '文字');
+
     res.json({
       correct: isCorrect,
       correctAnswer: quiz.correct_answer,
@@ -255,6 +259,10 @@ router.post('/generate', authenticateToken, async (req, res) => {
     
     const db = getDatabase();
     
+    // デバッグ: データベース保存前の解説を確認
+    console.log('💾 データベース保存前の解説:', generatedQuiz.explanation);
+    console.log('💾 データベース保存前の解説長さ:', generatedQuiz.explanation ? generatedQuiz.explanation.length : 0, '文字');
+
     // 生成されたクイズをデータベースに保存
     const result = await new Promise((resolve, reject) => {
       db.run(`
@@ -272,7 +280,10 @@ router.post('/generate', authenticateToken, async (req, res) => {
         generatedQuiz.explanation
       ], function(err) {
         if (err) reject(err);
-        else resolve({ id: this.lastID });
+        else {
+          console.log('✅ データベース保存完了 ID:', this.lastID);
+          resolve({ id: this.lastID });
+        }
       });
     });
     

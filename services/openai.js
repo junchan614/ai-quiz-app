@@ -44,25 +44,36 @@ function createQuizPrompt(topic, difficulty = 1) {
 }
 
 /**
+ * 難易度に応じてOpenAIモデルを選択
+ */
+function selectModel(difficulty) {
+  // 難易度3以上の場合はGPT-4oを使用、それ以外はGPT-3.5-turbo
+  return difficulty >= 3 ? "gpt-4o" : "gpt-3.5-turbo";
+}
+
+/**
  * OpenAI APIを使用してクイズを生成
  */
 async function generateQuiz(topic, difficulty = 1) {
   try {
-    console.log(`🤖 OpenAI APIでクイズ生成開始: ${topic} (難易度: ${difficulty})`);
+    const selectedModel = selectModel(difficulty);
+    console.log(`🤖 OpenAI APIでクイズ生成開始: ${topic} (難易度: ${difficulty}) [モデル: ${selectedModel}]`);
     
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: selectedModel,
       messages: [
         {
           role: "system",
-          content: "あなたは優秀な教育者であり、学習者の理解を深めることが得意な専門家です。クイズの解説では、単に正解を示すだけでなく、その理由や背景知識、他の選択肢が間違いである根拠を詳しく説明してください。学習者が「なるほど！」と納得できる教育的な解説を心がけ、JSON形式でのみ回答してください。"
+          content: selectedModel === "gpt-4o" 
+            ? "あなたは最高レベルの教育者であり、高難易度の問題において完璧な正確性が求められます。数学的事実、科学的原理、論理的推論において一切の誤りを避け、最も正確で教育的な解説を提供してください。特に基本的な定理や公式については絶対に間違えないでください。学習者が「なるほど！」と納得できる高品質な解説を心がけ、JSON形式でのみ回答してください。"
+            : "あなたは優秀な教育者であり、学習者の理解を深めることが得意な専門家です。クイズの解説では、単に正解を示すだけでなく、その理由や背景知識、他の選択肢が間違いである根拠を詳しく説明してください。学習者が「なるほど！」と納得できる教育的な解説を心がけ、JSON形式でのみ回答してください。"
         },
         {
           role: "user",
           content: createQuizPrompt(topic, difficulty)
         }
       ],
-      max_tokens: 650,
+      max_tokens: selectedModel === "gpt-4o" ? 800 : 650,
       temperature: 0.7,
       top_p: 1.0
     });
@@ -101,6 +112,10 @@ async function generateQuiz(topic, difficulty = 1) {
     if (completion.usage) {
       console.log(`📊 トークン使用量: ${completion.usage.total_tokens} (入力: ${completion.usage.prompt_tokens}, 出力: ${completion.usage.completion_tokens})`);
     }
+
+    // デバッグ: 生成された解説の内容を詳しく確認
+    console.log(`📝 生成された解説 [${selectedModel}]:`, quizData.explanation);
+    console.log('📏 解説の長さ:', quizData.explanation ? quizData.explanation.length : 0, '文字');
 
     // 追加のメタデータを設定
     quizData.topic = topic;
