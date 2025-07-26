@@ -50,10 +50,10 @@ const limiter = rateLimit({
   legacyHeaders: false
 });
 
-// ログイン試行のレート制限（開発環境では緩和）
+// ログイン試行のレート制限（緩和設定）
 const authLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5分
-  max: process.env.NODE_ENV === 'production' ? 5 : 50, // 開発環境では50回
+  max: process.env.NODE_ENV === 'production' ? 20 : 50, // 本番環境でも20回に緩和
   message: {
     error: 'ログイン試行回数が上限に達しました。しばらく待ってから再試行してください。'
   }
