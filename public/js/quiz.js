@@ -394,32 +394,14 @@ function hideLoading(elements) {
     elements.loadingSection.classList.add('hidden');
 }
 
-// エラーメッセージ表示
+// エラーメッセージ表示（無効化）
 function showError(message) {
-    const errorDiv = document.getElementById('error-message');
-    const errorText = document.getElementById('error-text');
-    
-    errorText.textContent = message;
-    errorDiv.classList.remove('hidden');
-    
-    // 5秒後に自動で非表示
-    setTimeout(() => {
-        errorDiv.classList.add('hidden');
-    }, 5000);
+    // メッセージ表示を無効化
 }
 
-// 成功メッセージ表示
+// 成功メッセージ表示（無効化）
 function showSuccess(message) {
-    const successDiv = document.getElementById('success-message');
-    const successText = document.getElementById('success-text');
-    
-    successText.textContent = message;
-    successDiv.classList.remove('hidden');
-    
-    // 3秒後に自動で非表示
-    setTimeout(() => {
-        successDiv.classList.add('hidden');
-    }, 3000);
+    // メッセージ表示を無効化
 }
 
 // メッセージクローズボタンのイベントリスナー
