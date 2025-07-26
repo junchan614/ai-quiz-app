@@ -75,6 +75,7 @@
     </div>
 
     <script src="js/auth.js"></script>
+    <script src="js/app-state.js"></script>
     <script>
         let currentUser = null;
 
@@ -86,10 +87,29 @@
             currentUser = await requireAuth();
             if (!currentUser) return;
 
+            // ユーザー情報をappStateに保存
+            appState.setUser(currentUser);
+
             // ユーザー情報表示
             updateWelcomeText();
             
-            // データ読み込み
+            // 統計データの変更監視を設定
+            appState.subscribe('stats', displayUserStats);
+            appState.subscribe('quizHistory', displayHistory);
+            
+            // キャッシュされた統計があれば即座に表示
+            const cachedStats = appState.getStats();
+            if (cachedStats) {
+                displayUserStats(cachedStats);
+            }
+            
+            // キャッシュされた履歴があれば即座に表示
+            const cachedHistory = appState.loadFromStorage('quizHistory');
+            if (cachedHistory && cachedHistory.length > 0) {
+                displayHistory(cachedHistory.slice(0, 5)); // 最新5件のみ表示
+            }
+            
+            // データ読み込み（キャッシュより新しいデータがある場合は更新）
             await Promise.all([
                 loadUserStats(),
                 loadRecentHistory()
@@ -111,7 +131,8 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    displayUserStats(data.stats);
+                    // appStateに保存（自動的にUI更新される）
+                    appState.setStats(data.stats);
                 } else {
                     console.error('統計データの取得に失敗しました');
                 }
@@ -138,7 +159,8 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    displayHistory(data.history);
+                    // appStateに保存（最新5件のみ表示用）
+                    appState.setQuizHistory(data.history);
                 } else {
                     console.error('履歴の取得に失敗しました');
                 }

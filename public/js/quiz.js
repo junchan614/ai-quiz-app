@@ -23,6 +23,13 @@ let sessionStats = {
 
 // ページ初期化
 function initializeQuizPage() {
+    // ユーザー情報をappStateから取得または設定
+    const user = appState.getUser();
+    if (!user) {
+        // 認証情報が不足している場合は再認証
+        window.location.href = '/login.html';
+        return;
+    }
     // DOM要素の取得
     const elements = {
         // 生成フォーム
@@ -256,7 +263,7 @@ async function submitQuizAnswer(elements) {
 function processAnswerResult(result, selectedAnswer, elements) {
     const isCorrect = result.correct;
     
-    // 統計更新
+    // セッション統計更新
     sessionStats.totalQuestions++;
     if (isCorrect) {
         sessionStats.correctAnswers++;
@@ -264,6 +271,24 @@ function processAnswerResult(result, selectedAnswer, elements) {
         sessionStats.maxStreak = Math.max(sessionStats.maxStreak, sessionStats.currentStreak);
     } else {
         sessionStats.currentStreak = 0;
+    }
+    
+    // appStateに回答履歴を追加
+    const currentQuiz = currentQuizzes[currentQuizIndex];
+    if (currentQuiz) {
+        const historyItem = {
+            id: Date.now(), // 一意なID
+            quiz_id: currentQuiz.id,
+            topic: currentQuiz.topic,
+            question: currentQuiz.question,
+            selected_answer: selectedAnswer,
+            correct_answer: result.correctAnswer,
+            is_correct: isCorrect,
+            answered_at: new Date().toISOString(),
+            difficulty: currentQuiz.difficulty || 1
+        };
+        
+        appState.addToQuizHistory(historyItem);
     }
     
     // 選択肢の視覚的フィードバック
